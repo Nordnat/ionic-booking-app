@@ -35,4 +35,8 @@ export class PlacesService {
     get places(): Place[] {
         return [...this._places];
     }
+
+    getPlace(id: string) {
+        return {...this._places.find(el => el.id === id)};
+    }
 }
