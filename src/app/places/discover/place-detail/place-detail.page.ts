@@ -1,6 +1,6 @@
 import {Component, OnDestroy, OnInit} from '@angular/core';
 import {ActivatedRoute} from '@angular/router';
-import {ModalController, NavController} from '@ionic/angular';
+import {ActionSheetController, ModalController, NavController} from '@ionic/angular';
 import {PlacesService} from '../../places.service';
 import {takeWhile} from 'rxjs/operators';
 import {Place} from '../../place.model';
@@ -16,7 +16,7 @@ export class PlaceDetailPage implements OnInit, OnDestroy {
     private alive = true;
 
     constructor(private route: ActivatedRoute, private navCtrl: NavController, private placesService: PlacesService,
-                private modalController: ModalController) {
+                private modalController: ModalController, private actionSheetCtrl: ActionSheetController) {
     }
 
     ngOnInit() {
@@ -31,6 +31,37 @@ export class PlaceDetailPage implements OnInit, OnDestroy {
     }
 
     onBookPlace() {
+        this.actionSheetCtrl.create({
+            header: 'Choose an Action',
+            buttons: [
+                {
+                    text: 'Select Date',
+                    handler: () => {
+                        this.openBookingModal('select');
+                    }
+                },
+                {
+                    text: 'Random Date',
+                    handler: () => {
+                        this.openBookingModal('random');
+                    }
+                },
+                {
+                    text: 'Cancel',
+                    role: 'cancel'
+                }
+            ]
+        }).then(actionSheetEl => {
+            actionSheetEl.present();
+        });
+    }
+
+    ngOnDestroy() {
+        this.alive = false;
+    }
+
+    openBookingModal(mode: 'select' | 'random') {
+        console.log(mode);
         this.modalController
             .create({component: CreateBookingComponent, componentProps: {selectedPlace: this.place}})
             .then(modalEl => {
@@ -41,10 +72,6 @@ export class PlaceDetailPage implements OnInit, OnDestroy {
             if (resultData.role === 'confirm') {
                 console.log('BOOK!');
             }
-        }) ;
-    }
-
-    ngOnDestroy() {
-        this.alive = false;
+        });
     }
 }
