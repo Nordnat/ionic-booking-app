@@ -15,19 +15,29 @@ export class PlaceDetailPage implements OnInit, OnDestroy {
     place: Place;
     private alive = true;
 
-    constructor(private route: ActivatedRoute, private navCtrl: NavController, private placesService: PlacesService,
-                private modalController: ModalController, private actionSheetCtrl: ActionSheetController) {
+    constructor(private route: ActivatedRoute,
+        private navCtrl: NavController,
+        private placesService: PlacesService,
+        private modalController: ModalController,
+        private actionSheetCtrl: ActionSheetController
+    ) {
     }
 
     ngOnInit() {
-        this.route.paramMap.pipe(takeWhile(() => this.alive)).subscribe(paramMap => {
-            if (!paramMap.has('placeId')) {
-                this.navCtrl.navigateBack('/places/tabs/discover');
-                return;
-            }
+        this.route.paramMap
+            .pipe(takeWhile(() => this.alive))
+            .subscribe(paramMap => {
+                if (!paramMap.has('placeId')) {
+                    this.navCtrl.navigateBack('/places/tabs/discover');
+                    return;
+                }
 
-            this.place = this.placesService.getPlace(paramMap.get('placeId'));
-        });
+                this.placesService.getPlace(paramMap.get('placeId'))
+                    .pipe(takeWhile(() => this.alive))
+                    .subscribe(place => {
+                        this.place = place;
+                    });
+            });
     }
 
     onBookPlace() {
@@ -51,9 +61,10 @@ export class PlaceDetailPage implements OnInit, OnDestroy {
                     role: 'cancel'
                 }
             ]
-        }).then(actionSheetEl => {
-            actionSheetEl.present();
-        });
+        })
+            .then(actionSheetEl => {
+                actionSheetEl.present();
+            });
     }
 
     ngOnDestroy() {
@@ -63,15 +74,22 @@ export class PlaceDetailPage implements OnInit, OnDestroy {
     openBookingModal(mode: 'select' | 'random') {
         console.log(mode);
         this.modalController
-            .create({component: CreateBookingComponent, componentProps: {selectedPlace: this.place}})
+            .create({
+                component: CreateBookingComponent,
+                componentProps: {selectedPlace: this.place, selectedMode: mode}
+            })
             .then(modalEl => {
                 modalEl.present();
                 return modalEl.onDidDismiss();
-            }).then(resultData => {
-            console.log(resultData.data, resultData.role);
-            if (resultData.role === 'confirm') {
-                console.log('BOOK!');
-            }
-        });
+            })
+            .then(resultData => {
+                console.log(
+                    resultData.data,
+                    resultData.role
+                );
+                if (resultData.role === 'confirm') {
+                    console.log('BOOK!');
+                }
+            });
     }
 }
